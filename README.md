@@ -1,16 +1,46 @@
 ## Hi there 👋
+# 🎮 Hardcade - PlayRetro
 
-<!--
-**HardCade/hardcade** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+**Développé par Olivier Mileo**
 
-Here are some ideas to get you started:
+---
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## 📦 Projets
+
+### MameRefreshSave0.168.V1.2Beta
+Modification de MAME 0.168 pour sauvegarder le Slider Refresh Rate dans les fichiers CFG.
+
+**Statut** : ✅ Version Beta 1.2  
+
+#### Fonctionnalités
+- ✅ Sauvegarde automatique du refresh rate
+- ✅ Chargement automatique au démarrage
+- ✅ Précision 0.001 Hz
+
+#### Fichiers modifiés
+- src/emu/screen.h
+- src/emu/screen.cpp
+- src/emu/video.cpp
+- src/emu/ui/ui.cpp
+
+---
+
+## 📥 Téléchargement
+
+Voir les [Releases](../../releases) pour télécharger.
+
+---
+
+## 📄 Documentation
+
+Documentation complète disponible dans le dossier `docs/`
+
+---
+
+## 🤝 Contact & Licence
+
+**Projet** : Mame 0.168 RefreshSave - Hardcade - PlayRetro  
+**Auteur** : Olivier Mileo  
+**Licence** : MIT
+
+© 2025 Hardcade - PlayRetro - Tous droits réservés
