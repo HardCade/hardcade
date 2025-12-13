@@ -52,12 +52,19 @@ LISTE DES FICHIERS MODIFIES
 =============================================================
 
 src/emu/screen.cpp
+
 src/emu/screen.h
+
 src/emu/ui/ui.cpp
+
 src/emu/video.cpp
+
 src/osd/windows/input.cpp
+
 src/osd/windows/video.cpp
+
 src/osd/modules/render/d3d/d3d9intf.cpp
+
 
 
 =============================================================
