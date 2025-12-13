@@ -3,7 +3,7 @@
 Voir les [Releases](../../releases) pour télécharger.
 
 
-README – CRT-MAME 0.168 V1.3
+README – CRT-MAME 0.168 V1.3  
 
 Version Développement – Décembre 2025
 © 2025 Hardcade – PlayRetro – Olivier Mileo
