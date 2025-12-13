@@ -8,7 +8,9 @@ README – CRT-MAME 0.168 V1.3
 Version Développement – Décembre 2025
 © 2025 Hardcade – PlayRetro – Olivier Mileo
 
+
 ================================================================================
+
 DÉVELOPPÉ PAR : Olivier Mileo
 PROJET : Edition CRT-MAME 0.168
 COPYRIGHT : © 2025 Hardcade – PlayRetro – Tous droits réservés
