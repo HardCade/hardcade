@@ -31,6 +31,7 @@ Objectif :
     - Obtenir un affichage ultra smooth et des performances optimales sur écran LCD.
 
 ================================
+
 PRINCIPALES FONCTIONS
 ================================
 
