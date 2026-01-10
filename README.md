@@ -2,448 +2,376 @@
 
 Voir les [Releases](../../releases) pour télécharger.
 
+================================================================================
+CRT-MAME-ARCADE-2D Perceptual Sync 0.168 V1.8
+================================================================================
 
-README – CRT-MAME 0.168 V1.3  
+Version Développement — Décembre 2025
+© 2025 Hardcade — Olivier Mileo
 
-Version Développement – Décembre 2025
-© 2025 Hardcade – PlayRetro – Olivier Mileo
+================================================================================
+DESCRIPTION
+================================================================================
+
+CRT-MAME-ARCADE-2D Perceptual Sync est une version spécialisée de MAME 0.168 optimisée pour 
+l'arcade 2D sur moniteurs CRT 15 kHz et écrans LCD modernes sous WINXP-32 avec carte graphique ATI ou NVIDIA +
+crt_emu drivers ou soft15khz.
+
+Cette édition se concentre sur la réduction maximale de l'input lag, la légèreté et 
+l'amélioration de la synchronisation vidéo pour une expérience arcade 
+authentique grâce à un affinage précis du Slider Refresh Rate jusqu'à 4 décimales.
+
+// PHILOSOPHIE :
+
+Pourquoi "CRT-MAME-ARCADE-2D Perceptual Sync" alors que d'autres émulateurs comme GROOVYMAME existent déjà ? 
+
+Que vous fassiez de l'émulation 15khz avec du matériel récent ou ancien, la synchronisation entre l'émulation et l'affichage 
+n'est jamais parfaite à 100% en pratique. Même si le modeline est calculé pour correspondre exactement à la fréquence du jeu original,
+parfois même en respectant les valeurs précises des drivers video de MAME le timing interpreté par votre matériel sera plus ou moins 
+éloigné du timing qu'il devrait réellement adopter pour être parfaitement calé sur le timing du jeu,
+
+il existe toujours des écarts (grands ou minuscules) dus aux :
+
+- Tolérances du matériel (moniteur CRT, carte graphique)
+- Imprécisions dans les horloges et oscillateurs
+- Arrondis dans les calculs, système d'exploitation
+
+Ces écarts sont aléatoires selon votre matériel même si vous utilisez LA modeline parfaite qui respecte mathématiquement
+les valeurs imposées par le système du jeu MAME, malgré ça la synchronisation dérive plus ou moins au fil du temps,
+créant cette ligne de tearing qui "marche" lentement ou rapidement sur l'écran - elle peut mettre plusieurs minutes voire dizaines de
+minutes pour traverser tout l'écran. C'est généralement considéré comme acceptable car :
+
+La ligne se déplace si lentement qu'elle est peu gênante en jeu
+C'est infiniment mieux que du tearing classique avec des lignes multiples qui bougent rapidement
+En y ajoutant une V-sync on la fait disparaitre au détriment d'une frame d'input lag, mais si notre modeline est trop éloigné
+du timing parfait nous obtiendrons un scrolling saccadé. Certains utilisateurs affinent encore leurs modelines ou ajustent 
+légèrement la fréquence de rafraîchissement pour minimiser ce phénomène, mais un micro-tearing reste souvent présent.
+
+
+Perceptual Sync est la philosophie d'un mode d’affichage CRT qui privilégie la stabilité visuelle perçue 
+(zéro tearing mobile, scrolling fluide) plutôt que l’exactitude absolue du refresh théorique.
+c’est une doctrine d’affichage CRT basée sur la perception humaine, pas sur la perfection mathématique.
+
+Perceptual Sync privilégie la fluidité perçue et la stabilité de l’image sur CRT.
+De légères variations de vitesse (≤0,0001 à 0,5 Hz) sont volontairement acceptées afin d’éliminer le tearing mobile.
+
+🔴 Ce que Perceptual Sync NE CHERCHE PAS à faire
+
+❌ Être mathématiquement exact
+❌ Être “perfect frame”
+❌ Imiter GroovyMAME
+❌ Convaincre les puristes théoriques
+
+👉 Il assume ses choix.
+
+Autrement dit : “Ce que l’œil voit est plus important que ce que les chiffres disent.”
+
+// Les principes fondamentaux :
+
+- Le refresh n’a PAS besoin d’être exact si on tolère une variation de : ±0.0001 à 0,5 Hz (configurable)
+
+👉 Résultat : vitesse imperceptiblement différente, image stable.
+
+// Priorité absolue à la stabilité du tearing :
+
+- Tearing autorisé ou pas avec Vsync activée 
+
+Mais : fixe, coincé hors zone visible si possible ou toujours au même endroit
+
+👉 Un tearing immobile est psychologiquement invisible.
+
+// Aucune chasse au “modeline parfaite” :
+
+- Pas de calcul dynamique
+
+- Pas de création de modes
+
+- Pas d’ajustement en temps réel
+
+👉 Une fois le mode choisi → et le slider refresh rate affiné on n’y touche plus !
+
+// Le joueur prime sur le chronomètre :
+
+- L’émulation respecte le gameplay
+
+- Pas l’horloge atomique
+
+- Aucune dérive perceptible en jeu
+
+================================================================================
+PRINCIPALES FONCTIONNALITÉS
+================================================================================
+
+INPUT & LATENCE
+───────────────
+  • Late Input Polling — Réduction de l'input lag
+  • DirectInput non bufferisé — Polling direct de l'état des périphériques
+  • Suppression de la frame queue GPU (D3D9)
+
+VIDEO & SYNCHRONISATION
+───────────────────────
+  • DirectDraw Low-Level VSync — Latence minimale sur CRT (Windows XP)
+  • D3D9 Real VSync — Suppression du tearing sans surcoût
+  • Désactivation du frameskip implicite — Scrolling fluide sur CRT
+  • Arrondi automatique du refresh — Optimisation des résolutions
+  • Switchres - CRT-OPTIMIZED MODE SELECTION
+
+INTERFACE & CONFIGURATION
+─────────────────────────
+  • Sauvegarde du slider Screen Refresh Rate à dans les CFG + précisions à 4 décimales au lieu de 3 par défaut
+  • Build ARCADE 2D optimisé — Exécutable allégé (dépourvu de jeux 3D, mécanique, casino, mahjong, ordi, consoles...
+    No Open GL, No BGFX, No support Network, No sound midi, No LUA Script)
+
+================================================================================
+MODIFICATIONS TECHNIQUES DÉTAILLÉES
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ LATE INPUT POLLING
+└─────────────────────────────────────────────────────────────────────────────
+
+  Les entrées DirectInput sont polées le plus tard possible dans la frame,
+  juste avant le rendu vidéo. Évite l'utilisation d'inputs de la frame N-1.
+
+  Fichier modifié : src/osd/windows/video.cpp
+  Fonction        : windows_osd_interface::update(bool skip_redraw)
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ DIRECTINPUT NON BUFFERISÉ
+└─────────────────────────────────────────────────────────────────────────────
+
+  Désactivation du buffer d'événements DirectInput (DIPROP_BUFFERSIZE = 0).
+  Lecture directe via GetDeviceState élimine 1 à 3 ms de latence.
+
+  Fichier modifié : src/osd/windows/input.cpp
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ DÉSACTIVATION DU FRAMESKIP IMPLICITE (CRT)
+└─────────────────────────────────────────────────────────────────────────────
+
+  MAME 0.168 applique un frameskip interne même avec frameskip=0 lorsqu'aucune
+  modification vidéo n'est détectée. Ce comportement dégrade le scrolling CRT.
+
+  Le frameskip implicite est désactivé quand frameskip=0 est explicite.
+  Compatible DDraw, Windows XP, CRT 15 kHz.
+
+  Fichier modifié : src/emu/video.cpp
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ SUPPRESSION DE LA FRAME QUEUE GPU (D3D9)
+└─────────────────────────────────────────────────────────────────────────────
+
+  Configuration D3D9 :
+    • SwapEffect = D3DSWAPEFFECT_COPY
+    • BackBufferCount = 1
+
+  Résultat : -1 frame de latence réelle côté affichage.
+
+  Fichier modifié : src/osd/windows/ddrawd3d.cpp
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ SLIDER SCREEN REFRESH RATE – HAUTE PRÉCISION & SAUVEGARDE
+└─────────────────────────────────────────────────────────────────────────────
+
+  Sauvegarde et rechargement automatique de la fréquence utilisateur dans
+  cfg/[nom_du_jeu].cfg, avec gestion du réglage ultra-fin du refresh rate CRT
+  à 0.0001 Hz, affichage et sauvegarde à 4 décimales.
+
+  Fonctionnement des touches :
+    • Flèches seules      → ±1.0000 Hz
+    • SHIFT + flèches     → ±0.1000 Hz
+    • ALT + flèches       → ±0.0010 Hz
+    • ESPACE + flèches    → ±0.0001 Hz
+    • CTRL + flèches      → ±1.0000 Hz (rapide)
+
+  Fonctions ajoutées :
+    • config_load_screen_refresh() — src/emu/video.cpp
+    • config_save_screen_refresh() — src/emu/video.cpp
+
+  Fonctions modifiées :
+    • slider_refresh() — src/emu/ui/ui.cpp
+        ◦ Conversion base 10000 → Hz pour 4 décimales
+        ◦ Arrondi et sauvegarde CFG précis à 4 décimales
+        ◦ Affichage FPS en 4 décimales
+    • ui_menu_sliders::handle() — src/emu/ui/sliders.cpp
+        ◦ Gestion de la touche ESPACE pour incrément ultra-fin
+    • slider_init() — src/emu/ui/ui.cpp
+        ◦ incval du slider refresh modifié à 1 (0.0001 Hz)
+
+  Fichiers concernés :
+    • src/emu/screen.cpp / screen.h
+    • src/emu/video.cpp
+    • src/emu/ui/ui.cpp
+    • src/emu/ui/sliders.cpp
+
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ D3D9 REAL VSYNC (NO TEARING)
+└─────────────────────────────────────────────────────────────────────────────
+
+  Force un VSync matériel D3D9 réel (PresentationInterval = D3DPRESENT_INTERVAL_ONE)
+  indépendant du VSync MAME classique. Supprime le tearing sans surcoût CPU.
+
+  Option INI : crtvsync 0|1
+    0 — Comportement MAME d'origine (défaut)
+    1 — VSync D3D9 matériel activé
+
+  Usage recommandé : Écrans LCD 31kHz ou CRT (ajoute ~1 frame de lag sur CRT)
+
+  Fichiers modifiés :
+    • src/osd/windows/winmain.cpp
+    • src/osd/windows/video.h / video.cpp
+    • src/osd/windows/ddrawd3d.cpp
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ DIRECTDRAW LOW-LEVEL VSYNC (CRT) V2
+└─────────────────────────────────────────────────────────────────────────────
+
+  Mode VSync DirectDraw bas niveau pour CRT 15 kHz sous Windows XP.
+  Rendu direct dans la surface primaire synchronisé sur le Vertical Blank.
+
+  Option INI : ddraw_lowlevel_vsync 0|1
+    0 — Comportement MAME classique (défaut)
+    1 — VSync DirectDraw bas niveau
+
+  ⚠ Active uniquement si waitvsync = 0
+  ⚠ Désactivé automatiquement si triple buffering actif
+
+  Fonctionnement :
+    1. Attente du VBL via WaitForVerticalBlank(DDWAITVB_BLOCKEND)
+    2. Lock direct de la surface primaire
+    3. Scan des primitives (détection blending/alpha)
+    4. Rendu membuffer ou direct selon besoins
+    5. Copie contrôlée membuffer → surface primaire
+    6. Unlock + bypass du blit MAME
+
+  Support :
+    • Formats 8-bit, 16-bit, 32-bit
+    • Blending et effets alpha complets
+    • RGB 32-bit (0x00ff0000), 16-bit 565 (0xf800), 15-bit 555 (0x7c00)
+    • Gestion surfaces perdues (Alt+Tab)
+
+  Compatibilité GPU (Windows XP) :
+    ✓ Excellente : NVIDIA TNT/GeForce 2/3/4/FX, ATI Radeon 7000-9800,
+                   Matrox G200/G400/G450/G550
+    ~ Partielle  : Intel iGPU i815/i845/i865 (VBL émulé)
+    ✗ Non testé  : Drivers Vista+ / WDDM
+
+  Résultat : Latence réduite d'environ 1 frame, synchronisation CRT stable.
+
+  Fichiers modifiés :
+    • src/osd/modules/render/drawdd.cpp
+    • src/emu/emuopts.cpp / emuopts.h
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ ARRONDI AUTOMATIQUE DU REFRESH (ONE-SHOT)
+└─────────────────────────────────────────────────────────────────────────────
+
+  Au premier lancement, si aucun CFG/slider n'existe, le refresh est arrondi
+  à l'entier le plus proche (ex: 57.445 → 57 Hz, 59.636 → 60 Hz).
+
+  Option INI : autorefreshround 1
+
+  Le slider utilisateur reste prioritaire.
+
+  Fichiers modifiés :
+    • src/emu/machine.cpp
+    • src/emu/screen.cpp / screen.h
+    • src/emu/emuopts.cpp / emuopts.h
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ BUILD 2D OPTIMISÉE — NETTOYAGE ARCADE.LST
+└─────────────────────────────────────────────────────────────────────────────
+
+  Version allégée spécialisée pour l'arcade 2D classique sur CRT 15 kHz.
+
+  Systèmes supprimés :
+    ✗ Tous les jeux 3D (Model 2/3, Naomi, Taito Type X etc.)
+    ✗ Systèmes casino (machines à sous, poker vidéo)
+    ✗ Jeux de mahjong
+    ✗ Systèmes "machine" non-arcade (ordinateurs, consoles)
+    ✗ Systèmes jeux mécaniques etc.
+
+  Systèmes conservés (2D uniquement) :
+    ✓ Capcom CPS1/CPS2/CPS3
+    ✓ Neo Geo MVS
+    ✓ Konami (GX, Classic)
+    ✓ Sega System 16/18/24
+    ✓ Taito (F2, F3)
+    ✓ Cave (CV1000, PGM)
+    ✓ Irem M72/M92
+    ✓ Toaplan, Psikyo, Data East
+    ✓ Namco System 1/2
+    ✓ Classiques 8-bit (Pac-Man, Donkey Kong, Galaga, etc.)
+
+  Résultat : Exécutable réduit, compilation plus rapide, liste ciblée CRT 2D.
+
+  Fichier modifié : src/mame/arcade.lst
+
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ DESACTIVATION DE UI LUA
+└─────────────────────────────────────────────────────────────────────────────
+
+l’appel périodique Lua periodic_check et frame_hook est maintenant commenté 
+pour éviter tout impact sur les performances ou les menus.
+
+
+┌─────────────────────────────────────────────────────────────────────────────
+│ HARDCADE SWITCHRES - CRT-OPTIMIZED MODE SELECTION
+└─────────────────────────────────────────────────────────────────────────────
+
+Objectif :
+Amélioration du switchres MAME pour privilégier le refresh exact sur CRT.
+
+Problème MAME original :
+Privilégie la résolution exacte, puis le refresh.
+→ Sur CRT, ±0,01 Hz de refresh = scrolling saccadé
+
+Solution HARDCADE :
+Inverser la priorité : Refresh > Height > Width
+
+Scoring modifié :
+- Refresh score = 1000 / (1 + diff_refresh)  ← Priorité absolue
+- Height match  = +200
+- Width ≥ jeu   = +50
+- Width > +16px = -20
+- Rejection si diff_refresh > 1 Hz
+
+Exemple :
+Jeu Neo Geo : 304x224 @ 59.185 Hz
+
+Modelines :
+  320x224@60 → score: 801   (diff: 0.815 Hz)
+  321x224@59 → score: 1094  (diff: 0.185 Hz) ✅ CHOISI
+
+Résultat :
+MAME choisit toujours le refresh le plus proche, même si la résolution
+diffère légèrement.
+
+✓ Fonctionne avec CRT_emudriver / Soft15khz / PowerStrip / 
+
+Fichier modifié :
+src/osd/modules/render/drawdd.cpp (enum_modes_callback)
 
 
 ================================================================================
+COMPATIBILITÉ
+================================================================================
 
-DÉVELOPPÉ PAR : Olivier Mileo
-PROJET : Edition CRT-MAME 0.168
-COPYRIGHT : © 2025 Hardcade – PlayRetro – Tous droits réservés
-DESCRIPTION
+  OS        : Windows XP / 7 / 8 / 10
+  Renderers : DDraw (XP), D3D9, GDI
+  Monitors  : CRT 15 kHz, LCD 31 kHz
 
-CRT-MAME 0.168 est une version spécialisée de MAME 0.168 optimisée pour :
+================================================================================
+CRÉDITS
+================================================================================
 
-les écrans CRT 15 kHz (arcade, TV, PVM/BVM, Hantarex, Nanao, etc.) et les écrans LCD 
+  Développement  : Olivier Mileo
+  Projet         : CRT-MAME ARCADE-2D 0.168 Edition
+  Base           : MAME 0.168
 
-un input lag minimal
+  © 2025 Hardcade — Tous droits réservés
 
-un contrôle avancé et précis du refresh rate par jeu
-
-Objectif : 
-
-    - Obtenir un input lag minimal
-    - Obtenir des performances d'affichage accrues et un comportement supérieur (aux émulateurs déjà existants) pour le CRT 15 kHz. 
-    - Obtenir un affichage ultra smooth et des performances optimales sur écran LCD.
-
-================================
-
-PRINCIPALES FONCTIONS
-================================
-
-- Sauvegarde du slider Refresh Rate dans les fichiers CFG
-
-- Amélioration du slider (précision, stabilité, arrondi, gestion du défaut)
-
-- Ajout du timestamp input Windows (préparation anti-lag)
-
-- Ajout du Late Input Polling (réduction d’1 frame complète d’input lag)
-
-- Ajout optimisation Direct3D – “Direct Present Minimal” (permettant une réduction du lag d’affichage)
-
-- Ajout HardSync Adaptatif (Stabilise le timing frame et évite les oscillations, réduit la latence globale)
-
-
-=============================================================
-LISTE DES FICHIERS MODIFIES
-=============================================================
-
-src/emu/screen.cpp
-
-src/emu/screen.h
-
-src/emu/ui/ui.cpp
-
-src/emu/video.cpp
-
-src/osd/windows/input.cpp
-
-src/osd/windows/video.cpp
-
-src/osd/modules/render/d3d/d3d9intf.cpp
-
-
-
-=============================================================
-CRT-MAME 0.168 — V1.3
-Notes de modification
-=============================================================
-1) SLIDER REFRESH RATE CFG — Sauvegarde initiale (V1)
-
-Fonctionnalité :
-Sauvegarde et rechargement automatique de la fréquence utilisateur dans :
-cfg/[nom_du_jeu].cfg
-
-Fichiers modifiés :
-
-src/emu/video.cpp → config_save_screen_refresh() / config_load_screen_refresh()
-
--------------------------------------------------------------------------------------------------------------------------------
-
-2) SLIDER REFRESH RATE — Améliorations (V2)
-
-Améliorations :
-
-Slider dans le menu TAB fonctionnel et stable
-
-Arrondi à 3 décimales pour cohérence exacte
-
-Sauvegarde uniquement si différence réelle
-
-Ajout de la fréquence d’origine pour comparaison propre
-
-Application immédiate de la nouvelle fréquence
-
-Fichiers modifiés :
-
-src/emu/ui/ui.cpp — slider_refresh()
-
-src/emu/screen.h — m_user_refresh_rate, setters/getters, valeur par défaut
-
-src/emu/screen.cpp — initialisation default refresh
-
-src/emu/video.cpp — V2 CFG load/save
-
-
-NOUVELLE FONCTION AJOUTEE dans src/emu/video.cpp :
-
-//-------------------------------------------------
-//  HARDCADE config_load_screen_refresh - load screen refresh rates MODIF
-//-------------------------------------------------
-
-static void config_load_screen_refresh(running_machine &machine, int cfg_type, xml_data_node *parentnode)
-{
-	// only load game configurations
-	if (cfg_type != CONFIG_TYPE_GAME || parentnode == NULL)
-		return;
-
-	// iterate over screen nodes
-	for (xml_data_node *screennode = xml_get_sibling(parentnode->child, "screen"); 
-	     screennode != NULL; 
-	     screennode = xml_get_sibling(screennode->next, "screen"))
-	{
-		// get the screen tag
-		const char *screen_tag = xml_get_attribute_string(screennode, "tag", "");
-		if (screen_tag[0] == 0)
-			continue;
-		
-		// find the matching screen device
-		screen_device_iterator iter(machine.root_device());
-		for (screen_device *screen = iter.first(); screen != NULL; screen = iter.next())
-		{
-			if (strcmp(screen->tag(), screen_tag) == 0)
-			{
-				// load and apply the refresh rate
-				double refresh = xml_get_attribute_float(screennode, "refresh", 0.0);
-				if (refresh > 0.0)
-				{
-					// store the user refresh rate
-					screen->set_user_refresh_rate(refresh);
-					
-					// apply it immediately
-					int width = screen->width();
-					int height = screen->height();
-					const rectangle &visarea = screen->visible_area();
-					screen->configure(width, height, visarea, HZ_TO_ATTOSECONDS(refresh));
-				}
-				break;
-			}
-		}
-	}
-}
-
-//-------------------------------------------------
-//  HARDCADE config_save_screen_refresh - save screen refresh rates
-//-------------------------------------------------
-
-static void config_save_screen_refresh(running_machine &machine, int cfg_type, xml_data_node *parentnode)
-{
-	// only save game configurations
-	if (cfg_type != CONFIG_TYPE_GAME || parentnode == NULL)
-		return;
-
-	// iterate over all screens
-	screen_device_iterator iter(machine.root_device());
-	for (screen_device *screen = iter.first(); screen != NULL; screen = iter.next())
-	{
-		// only save if user has set a custom refresh rate
-		double refresh = screen->user_refresh_rate();
-		if (refresh > 0.0)
-		{
-			// create a screen node
-			xml_data_node *screennode = xml_add_child(parentnode, "screen", NULL);
-			if (screennode != NULL)
-			{
-				xml_set_attribute(screennode, "tag", screen->tag());
-				xml_set_attribute_float(screennode, "refresh", refresh);
-			}
-		}
-	}
-}
-
-
-FONCTION MODIFIEE DANS dans src/emu/ui/ui.cpp :
-
-//-------------------------------------------------
-//  HARDCADE slider_refresh - refresh rate slider callback
-//-------------------------------------------------
-
-static INT32 slider_refresh(running_machine &machine, void *arg, std::string *str, INT32 newval)
-{
-    screen_device *screen = reinterpret_cast<screen_device *>(arg);
-    double defrefresh = screen->default_refresh_rate();
-    double refresh;
-
-    if (newval != SLIDER_NOCHANGE)
-    {
-        int width = screen->width();
-        int height = screen->height();
-        const rectangle &visarea = screen->visible_area();
-        
-        // nouvelle valeur brute
-        double new_refresh = defrefresh + (double)newval * 0.001;
-        
-        // APPLIQUER la valeur (imprécise, c’est normal)
-        screen->configure(width, height, visarea, HZ_TO_ATTOSECONDS(new_refresh));
-
-        // ARRONDI pour l'affichage et la sauvegarde
-        double rounded_new = floor(new_refresh * 1000.0 + 0.5) / 1000.0;
-        double rounded_default = floor(defrefresh * 1000.0 + 0.5) / 1000.0;
-
-        // SAUVEGARDER uniquement la valeur arrondie
-        if (rounded_new != rounded_default)
-            screen->set_user_refresh_rate(rounded_new);  // <-- CORRECT !
-        else
-            screen->set_user_refresh_rate(0.0);
-    }
-
-	if (str != NULL)
-		strprintf(*str, "%.3ffps", ATTOSECONDS_TO_HZ(screen->frame_period().attoseconds()));
-
-	refresh = ATTOSECONDS_TO_HZ(screen->frame_period().attoseconds());
-	return floor((refresh - defrefresh) * 1000.0 + 0.5);
-}
-
--------------------------------------------------------------------------------------------------------------------------------
-
-
-3) INPUT LAG — Timestamp Windows (V3)
-
-Objectif : capturer l’instant exact où un input est mis à jour.
-
-Fonctionnalité :
-Ajout d’un timestamp haute précision lors des mises à jour :
-
-Win32 keyboard
-
-RawInput
-
-DirectInput (joysticks USB + HID anciens)
-
-Fichiers modifiés :
-
-src/osd/windows/input.cpp
-
-ajout UINT64 last_timestamp dans class device_info
-
-ajout de devinfo->last_timestamp = osd_ticks(); dans :
-
-win32_keyboard_poll()
-
-rawinput_keyboard_update()
-
-dinput_joystick_poll()
-
--------------------------------------------------------------------------------------------------------------------------------
-
-4) INPUT LAG — Late Input Polling (V3b)
-
-Nouvelle fonctionnalité majeure : Ajout du Late Input Polling (LIP), réduction d’1 frame d’input lag.
-
-   - Polling des périphériques déplacé juste avant le traitement d’input
-   - Permet de réduire l’input lag d’une frame complète
-   - Fonction ajoutée : late_input_poll()
-   - Intégrée dans windows_osd_interface::update()
-
-
-Principe :
-Forcer un polling ultra tardif des périphériques juste avant que Windows traite les messages de la frame → input plus frais = 1 frame gagnée.
-
-Ajouts :
-
-a) Nouvelle fonction
-
-src/osd/windows/input.cpp :
-
-void late_input_poll(running_machine &machine)
-{
-    osd_lock_acquire(input_lock);
-
-    if (keyboard_list)   device_list_poll_devices(keyboard_list);
-    if (mouse_list)      device_list_poll_devices(mouse_list);
-    if (lightgun_list)   device_list_poll_devices(lightgun_list);
-    if (joystick_list)   device_list_poll_devices(joystick_list);
-
-    last_poll = GetTickCount();
-
-    osd_lock_release(input_lock);
-}
-
-b) Appel dans la boucle Windows (critique)
-
-Dans src/osd/windows/video.cpp, fonction :
-
-	Insertion de late_input_poll(machine()) dans windows_osd_interface::update()
-	Ajout du extern void late_input_poll(running_machine &machine);
-
--------------------------------------------------------------------------------------------------------------------------------
-
-5) Optimisation Direct3D – “Direct Present Minimal”
-
-Une optimisation GPU inspirée de GroovyMAME permettant une réduction du lag d’affichage.
-
-- Fonctionnalités ajoutées
-
-Présentation d’image immédiate via SwapChain->Present()
-
-Contournement du buffering interne Direct3D
-
-Réduction du lag GPU d’environ 1 frame
-
-Compatible Windows XP / Direct3D 9
-
-Fallback sécurisé si l’option n’est pas supportée par le driver
-
-- Fichiers modifiés :
-
-src/osd/modules/render/d3d/d3d9intf.cpp
-
-- Remplacement complet de la fonction :
-
-device_present()
-
-// HARDCADE MODIFICATION Direct Present Minimal ///////////////////////////////////
-static HRESULT device_present(device *dev, const RECT *source, const RECT *dest, HWND override, RGNDATA *dirty, DWORD flags)
-{
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)dev;
-
-    // If flags are provided, prefer presenting via the swapchain with those flags
-    if (flags != 0)
-    {
-        IDirect3DSwapChain9 *chain = NULL;
-        HRESULT result = IDirect3DDevice9_GetSwapChain(device, 0, &chain);
-        if (result == D3D_OK && chain != NULL)
-        {
-            result = IDirect3DSwapChain9_Present(chain, source, dest, override, dirty, flags);
-            IDirect3DSwapChain9_Release(chain);
-            return result;
-        }
-    }
-
-    // Attempt to present via the swapchain with FORCEIMMEDIATE if available.
-    // This is preferred because IDirect3DDevice9::Present() has no flags parameter.
-    IDirect3DSwapChain9 *chain = NULL;
-    HRESULT r = IDirect3DDevice9_GetSwapChain(device, 0, &chain);
-    if (r == D3D_OK && chain != NULL)
-    {
-#ifdef D3DPRESENT_FORCEIMMEDIATE
-        HRESULT pres = IDirect3DSwapChain9_Present(chain, source, dest, override, dirty, D3DPRESENT_FORCEIMMEDIATE);
-#else
-        // Fall back to zero flags if FORCEIMMEDIATE is not defined
-        HRESULT pres = IDirect3DSwapChain9_Present(chain, source, dest, override, dirty, 0);
-#endif
-        IDirect3DSwapChain9_Release(chain);
-        return pres;
-    }
-
-    // Last-resort fallback: call device Present (no flags)
-    return IDirect3DDevice9_Present(device, source, dest, override, dirty);
-}
-
-// HARDCADE Direct Present Minimal ///////////////////////////////////
-
-
-- Description rapide
-
-Le patch force Direct3D à présenter l’image dès que possible, sans passer par la file d’attente GPU habituelle.
-Résultat : affichage plus direct, image plus proche du timing réel, meilleure réactivité en 15 kHz et LCD.
-
-- Interaction avec les autres optimisations
-
-Cette optimisation s’ajoute à :
-
-Sauvegarde personnalisée du refresh rate
-
-Late Input Polling
-
-Amélioration du système d’entrée DirectInput / RawInput
-
-Aucune incompatibilité connue.
-
-Configuration ini recommandée pour bénéficier de l’amélioration GPU :
-
--video d3d
--waitvsync 0
-
--------------------------------------------------------------------------------------------------------------------------------
-
-6) HARDCADE CRT-MAME — HardSync Adaptatif
-
-Ajout d’un système léger de synchronisation CPU avant le rendu vidéo, compatible Windows XP et petites configurations.
-
-Effet :
-
-Réduit les micro-saccades (micro-stutter)
-
-Évite les Present() trop précoces
-
-Aucune charge CPU (Sleep(0))
-
-Fonctionne avec : DirectDraw, Direct3D, GDI
-
-- Modifications appliquées
-Fichier modifié : src/osd/windows/video.cpp
-
-Dans la fonction :
-
-void windows_osd_interface::update(bool skip_redraw)
-
-Un nouveau bloc a été ajouté avant le Late Input Poll :
-
-// HARDCADE CRT-MAME : HardSync Adaptatif (latence réduite)
-
-if (video_config.waitvsync == FALSE && video_config.syncrefresh == FALSE)
-{
-    DWORD now = timeGetTime();
-    DWORD delta = now - last_event_check;
-
-    if (delta < 10)
-    {
-        Sleep(0); // yield CPU → stabilise le timing
-    }
-}
-
-- Objectif du HardSync Adaptatif
-
-Stabiliser le timing frame et éviter les oscillations
-
-Réduire la latence globale sans bloquer la machine
-
-Fonctionne même lorsque la carte vidéo est ancienne ou lente
-
-Version simplifiée et plus sûre qu’un vrai Hard Sync GroovyMAME
-
-
-================================
-VERSION
-================================
-
-CRT-MAME 0.168 — V1.3
-Décembre 2025
-© 2025 Hardcade – PlayRetro – Olivier Mileo
 ================================================================================
 
