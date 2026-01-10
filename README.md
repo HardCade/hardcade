@@ -94,7 +94,6 @@ Perceptual Sync privilégie la fluidité perçue et la stabilité de l'image sur
 - **D3D9 Real VSync** — Suppression du tearing sans surcoût
 - **Désactivation du frameskip implicite** — Scrolling fluide sur CRT
 - **Arrondi automatique du refresh** — Optimisation des résolutions
-- **Switchres - CRT-OPTIMIZED MODE SELECTION**
 
 ### INTERFACE & CONFIGURATION
 
@@ -291,45 +290,6 @@ Version allégée spécialisée pour l'arcade 2D classique sur CRT 15 kHz.
 ### DÉSACTIVATION DE UI LUA
 
 L'appel périodique Lua periodic_check et frame_hook est maintenant commenté pour éviter tout impact sur les performances ou les menus.
-
----
-
-### HARDCADE SWITCHRES - CRT-OPTIMIZED MODE SELECTION
-
-#### Objectif :
-
-Amélioration du switchres MAME pour privilégier le refresh exact sur CRT.
-
-#### Problème MAME original :
-
-Privilégie la résolution exacte, puis le refresh.  
-→ Sur CRT, ±0,01 Hz de refresh = scrolling saccadé
-
-#### Solution HARDCADE :
-
-Inverser la priorité : **Refresh > Height > Width**
-
-#### Scoring modifié :
-
-- Refresh score = 1000 / (1 + diff_refresh) ← **Priorité absolue**
-- Height match = +200
-- Width ≥ jeu = +50
-- Width > +16px = -20
-- Rejection si diff_refresh > 1 Hz
-
-#### Exemple :
-
-Jeu Neo Geo : 304x224 @ 59.185 Hz
-
-**Modelines :**
-- `320x224@60` → score: 801 (diff: 0.815 Hz)
-- `321x224@59` → score: 1094 (diff: 0.185 Hz) ✅ **CHOISI**
-
-**Résultat :** MAME choisit toujours le refresh le plus proche, même si la résolution diffère légèrement.
-
-✓ Fonctionne avec CRT_emudriver / Soft15khz / PowerStrip
-
-**Fichier modifié :** `src/osd/modules/render/drawdd.cpp` (enum_modes_callback)
 
 ---
 
