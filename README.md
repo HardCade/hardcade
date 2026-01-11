@@ -20,7 +20,7 @@ Cette édition se concentre sur la réduction maximale de l'input lag, la légè
 
 ### Pourquoi "CRT-MAME-ARCADE-2D Perceptual Sync" ?
 
-Que vous fassiez de l'émulation 15khz avec du matériel récent ou ancien, la synchronisation entre l'émulation et l'affichage n'est jamais parfaite à 100% en pratique. Même si le modeline est calculé pour correspondre exactement à la fréquence du jeu original, parfois même en respectant les valeurs précises des drivers video de MAME le timing interprété par votre matériel sera plus ou moins éloigné du timing qu'il devrait réellement adopter pour être parfaitement calé sur le timing du jeu.
+Que vous émulez en 15khz avec du matériel récent ou ancien, la synchronisation entre l'émulation et l'affichage n'est jamais parfaite à 100% en pratique. Même si le modeline est calculé pour correspondre exactement à la fréquence du jeu original, parfois même en respectant les valeurs précises des drivers video de MAME le timing interprété par votre matériel sera plus ou moins éloigné du timing qu'il devrait réellement adopter pour être parfaitement calé sur le timing du jeu.
 
 Il existe toujours des écarts (grands ou minuscules) dus aux :
 
