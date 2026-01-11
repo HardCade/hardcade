@@ -1,7 +1,7 @@
 ## 📥 Téléchargement
 
 Voir les [Releases](../../releases) pour télécharger.
-# CRT-MAME-ARCADE-2D Perceptual Sync 0.168 V1.8
+# CRT-MAME-ARCADE-2D Perceptual Sync 0.168 V2.0
 
 **Version Développement — Décembre 2025**  
 © 2025 Hardcade — Olivier Mileo
@@ -10,10 +10,29 @@ Voir les [Releases](../../releases) pour télécharger.
 
 ## DESCRIPTION
 
-CRT-MAME-ARCADE-2D Perceptual Sync est une version spécialisée de MAME 0.168 optimisée pour l'arcade 2D sur moniteurs CRT 15 kHz et écrans LCD modernes sous WINXP-32 avec carte graphique ATI ou NVIDIA + crt_emu drivers ou soft15khz.
 
-Cette édition se concentre sur la réduction maximale de l'input lag, la légèreté et l'amélioration de la synchronisation vidéo pour une expérience arcade authentique grâce à un affinage précis du Slider Refresh Rate jusqu'à 4 décimales.
+CRT-MAME-ARCADE-2D Perceptual Sync est une version spécialisée de MAME 0.168 optimisée pour 
+l'arcade 2D sur moniteurs CRT 15 kHz et écrans LCD modernes sous WINXP-32 avec carte graphique ATI ou NVIDIA +
+crt_emu drivers ou soft15khz.
 
+Cette édition se concentre sur la réduction maximale de l'input lag, la légèreté et 
+l'amélioration de la synchronisation vidéo pour une expérience arcade authentique.
+
+Deux approches complémentaires de synchronisation CRT sont proposées :
+
+→ MODE MANUEL "Perceptual Sync" : Affinage précis du Slider Refresh Rate jusqu'à 
+  4 décimales (±0.0001 Hz) pour un contrôle total du timing. Idéal pour les puristes 
+  qui souhaitent calibrer chaque jeu individuellement et obtenir un timing hardware 
+  strictement authentique avec un tearing fixe quasi-invisible.
+
+→ MODE AUTOMATIQUE "Adaptive Sync" : VSync DirectDraw Low-Level qui s'adapte 
+  automatiquement au refresh réel de votre CRT (type Snes9x/RetroArch). Scrolling 
+  ultra-fluide garanti quelle que soit votre modeline (58 Hz, 60 Hz, 61 Hz...), 
+  sans aucun réglage manuel nécessaire. MAME ajuste sa vitesse pour matcher 
+  parfaitement votre écran.
+
+Choisissez votre philosophie : contrôle manuel absolu ou fluidité automatique sans effort.
+Les deux méthodes éliminent le tearing mobile et garantissent une expérience CRT optimale.
 ---
 
 ## PHILOSOPHIE
@@ -217,6 +236,23 @@ Mode VSync DirectDraw bas niveau pour CRT 15 kHz sous Windows XP. Rendu direct d
 4. Rendu membuffer ou direct selon besoins
 5. Copie contrôlée membuffer → surface primaire
 6. Unlock + bypass du blit MAME
+7. Désactivation complète du throttling MAME (update_throttle bypass)
+
+Synchronisation automatique type Snes9x :
+  • MAME s'adapte AUTOMATIQUEMENT au refresh réel du CRT
+  • Fonctionne avec N'IMPORTE QUELLE modeline (58 Hz, 60 Hz, 61 Hz...)
+  • Le VBlank CRT dicte le timing → scrolling toujours fluide
+  • Pas besoin d'ajuster le slider refresh rate manuellement
+  • La vitesse d'émulation s'ajuste pour matcher le refresh de l'écran
+    
+  Exemple :
+    Jeu CPS2 natif : 59.637 Hz
+    Modeline CRT   : 60.000 Hz
+    → MAME tourne à 60 Hz (100.6% vitesse) → scrolling parfaitement fluide
+    
+    Jeu CPS2 natif : 59.637 Hz  
+    Modeline CRT   : 58.000 Hz
+    → MAME tourne à 58 Hz (97.3% vitesse) → scrolling parfaitement fluide
 
 #### Support :
 
@@ -233,7 +269,12 @@ Mode VSync DirectDraw bas niveau pour CRT 15 kHz sous Windows XP. Rendu direct d
 | ~ Partielle | Intel iGPU i815/i845/i865 (VBL émulé) |
 | ✗ Non testé | Drivers Vista+ / WDDM |
 
-**Résultat :** Latence réduite d'environ 1 frame, synchronisation CRT stable.
+
+Résultat : 
+  • Latence réduite d'environ 1 frame
+  • Synchronisation CRT parfaite automatique (type Snes9x/RetroArch)
+  • Zéro tearing, scrolling ultra-fluide quelle que soit la modeline
+  • Plus besoin d'affiner manuellement chaque jeu
 
 **Fichiers modifiés :**
 - `src/osd/modules/render/drawdd.cpp`
