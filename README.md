@@ -11,11 +11,11 @@ Voir les [Releases](../../releases) pour télécharger.
 
 ## DESCRIPTION
 
-CRT-MAME-ARCADE-2D Perceptual Sync est une version spécialisée de MAME 0.168 optimisée pour l'arcade 2D sur moniteurs CRT 15 kHz et écrans LCD modernes sous WINXP-32 avec carte graphique ATI ou NVIDIA + crt_emu drivers ou soft15khz.
+CRT-MAME-ARCADE-2D Perceptual Sync est une version spécialisée de MAME 0.168 optimisée pour l'arcade 2D sur moniteurs CRT 15 kHz sous WINXP-32 avec carte graphique ATI ou NVIDIA + crt_emu drivers ou soft15khz.
 
-Cette édition se concentre sur la réduction maximale de l'input lag, la légèreté et l'amélioration de la synchronisation vidéo pour une expérience arcade authentique.
+### Trois approches complémentaires de synchronisation et sélection vidéo CRT
 
-### Deux approches complémentaires de synchronisation CRT / LCD
+Trois approches sont proposées pour un contrôle total de votre affichage :
 
 #### Option INI `auto_refresh_sync = 0`
 
@@ -25,11 +25,15 @@ Cette édition se concentre sur la réduction maximale de l'input lag, la légè
 
 **→ MODE AUTOMATIQUE PERFECT SYNC (DDRAW)** : Le refresh rate réel du CRT est mesuré automatiquement au lancement du jeu, après que l'écran vidéo ait produit un nombre suffisant de frames stables. La valeur calculée est appliquée dynamiquement au moteur vidéo et au slider utilisateur en mémoire uniquement (aucune écriture dans le fichier CFG). Scrolling ultra-fluide même sur des modelines atypiques (57.45878 Hz, 58.25494 Hz, 60.61575 Hz…)
 
+#### HARDCADE SWITCHRES CRT (Intégré)
+
+**→ SÉLECTION DE MODE OPTIMISÉE 15KHZ** : Une réécriture profonde de l'algorithme DirectDraw. Contrairement au MAME standard, cette version privilégie la fluidité (Hz) sur la résolution exacte grâce à une tolérance verticale de ±24 lignes. Elle permet d'utiliser vos meilleures modelines 240p pour tout le catalogue (224p, 239p, 256p...) afin de garantir un affichage toujours complet, centré, et une synchronisation verticale parfaite sans saccades.
+
 ### Choisissez votre philosophie
 
 Contrôle manuel absolu ou fluidité automatique sans effort. Les deux méthodes éliminent le tearing mobile et garantissent une expérience CRT optimale.
 
-- Si vos modelines sont déjà très proches des timings originaux des jeux, l'activation de cette option vous offrira l'expérience ultime.
+- Si vos modelines sont proches des timings originaux des jeux, l'activation de cette option vous offrira l'expérience ultime.
 - Si vos modelines sont éloignées des timings originaux, vous percevrez uniquement une légère augmentation ou diminution de la vitesse du jeu, tout en conservant un timing parfait en termes de scrolling fluide, d'élimination du tearing, et de fidélité visuelle globale.
 
 ---
@@ -112,12 +116,12 @@ Autrement dit : **"Ce que l'œil voit est plus important que ce que les chiffres
 
 ### VIDEO & SYNCHRONISATION
 
-- **Auto Refresh Syncro, calcul du réel refresh rate, s'adapte AUTOMATIQUEMENT au refresh réel du CRT
+- **Auto Refresh Syncro** — Calcul du réel refresh rate, s'adapte AUTOMATIQUEMENT au refresh réel du CRT
 - **Sauvegarde du slider Screen Refresh Rate** dans les CFG + précisions à 4 décimales au lieu de 3 par défaut
-- **DirectDraw Low-Level VSync**  — Suppression du tearing sans surcoût
+- **Switchres** - HARDCADE CRT-OPTIMIZED MODE SELECTION (Version 3.0)
+- **DirectDraw Low-Level VSync** — Suppression du tearing sans surcoût
 - **D3D9 Real VSync** — Suppression du tearing sans surcoût
 - **Désactivation du frameskip implicite** — Scrolling fluide sur CRT
-- **Arrondi automatique du refresh** — Optimisation des résolutions
 
 ### INTERFACE & CONFIGURATION
 
@@ -171,6 +175,86 @@ La calibration est volontairement retardée de plusieurs dizaines de frames afin
 
 ---
 
+### SLIDER SCREEN REFRESH RATE — HAUTE PRÉCISION & SAUVEGARDE CFG
+
+Sauvegarde et rechargement automatique de la fréquence utilisateur dans `cfg/[nom_du_jeu].cfg`, avec gestion du réglage ultra-fin du refresh rate CRT à 0.0001 Hz, affichage et sauvegarde à 4 décimales.
+
+**Fonctionne uniquement si `auto_refresh_sync = 0`**
+
+**Fonctionnement des touches :**
+- Flèches seules → ±1.0000 Hz
+- SHIFT + flèches → ±0.1000 Hz
+- ALT + flèches → ±0.0010 Hz
+- ESPACE + flèches → ±0.0001 Hz
+- CTRL + flèches → ±1.0000 Hz (rapide)
+
+**Fonctions ajoutées :**
+- `config_load_screen_refresh()` — `src/emu/video.cpp`
+- `config_save_screen_refresh()` — `src/emu/video.cpp`
+
+**Fonctions modifiées :**
+- `slider_refresh()` — `src/emu/ui/ui.cpp`
+  - Conversion base 10000 → Hz pour 4 décimales
+  - Arrondi et sauvegarde CFG précis à 4 décimales
+  - Affichage FPS en 4 décimales
+- `ui_menu_sliders::handle()` — `src/emu/ui/sliders.cpp`
+  - Gestion de la touche ESPACE pour incrément ultra-fin
+- `slider_init()` — `src/emu/ui/ui.cpp`
+  - incval du slider refresh modifié à 1 (0.0001 Hz)
+
+**Fichiers concernés :**
+- `src/emu/screen.cpp` / `screen.h`
+- `src/emu/video.cpp`
+- `src/emu/ui/ui.cpp`
+- `src/emu/ui/sliders.cpp`
+
+---
+
+### HARDCADE SWITCHRES - CRT-OPTIMIZED MODE SELECTION
+
+Cette version de CRT-MAME-ARCADE 0.168 introduit une réécriture complète de la fonction SwitchRes DirectDraw, spécifiquement pensée pour un affichage CRT 15 kHz (arcade / JAMMA / RGB) et les configurations Windows XP / GeForce.
+
+La sélection du mode vidéo DirectDraw repose désormais sur une hiérarchie de priorités "Hardware-First", garantissant la fluidité et l'intégrité de l'image.
+
+#### LOGIQUE DE SÉLECTION HARDCADE V3
+
+**1. PRIORITÉ ABSOLUE AU "INI" (User Override)**
+
+Si une résolution est forcée dans le fichier .ini du jeu, le SwitchRes l'applique immédiatement avec un score prioritaire (1.000.000 pts). Cela permet de forcer un mode spécifique même s'il est techniquement éloigné de la résolution native du jeu.
+
+**2. TOLÉRANCE VERTICALE INTELLIGENTE (±24 Lignes)**
+
+En mode Auto, le SwitchRes autorise désormais un écart allant jusqu'à 24 lignes verticales (ex: utiliser un mode 240p pour un jeu en 224p). Cela permet de maintenir l'utilisation de modelines stables et bien cadrées physiquement, évitant les écrans noirs ou les images tronquées.
+
+**3. PRIORITE DU REFRESH RATE (Fluidité Totale)**
+
+À l'intérieur de la zone de tolérance verticale, c'est la proximité du rafraîchissement (Hz) qui détermine le gagnant. Le système préférera toujours un mode à 58Hz pour un jeu de 58Hz, même si le nombre de lignes diffère légèrement, garantissant un scrolling parfait sans saccades.
+
+#### DIFFÉRENCES AVEC LA LOGIQUE MAME D'ORIGINE
+
+**• MAME ORIGINAL (Logique LCD) :**
+- Priorité au refresh supérieur (pénalité si Hz inférieur).
+- Rejet immédiat si la résolution est inférieure à la cible (Image tronquée).
+- Importance démesurée de la largeur (Pixel Clock).
+
+**• HARDCADE CRT (Logique Analogique) :**
+- Hauteur (Scanlines) et Refresh sont les seuls critères vitaux.
+- Largeur traitée comme critère secondaire (ajustable sur le moniteur).
+- Élimination du scaling vertical destructeur.
+
+**FICHIERS MODIFIÉS :**
+
+- `src/osd/modules/render/drawdd.cpp`
+  - → Réécriture de `enum_modes_callback` (Logique Hardcade V3)
+
+**• Rendu LCD** (Fonctionne aussi parfaitement !)
+
+Aucun impact sur :
+- D3D / OGL
+- Autres backends vidéo
+
+---
+
 ### LATE INPUT POLLING
 
 Les entrées DirectInput sont polées le plus tard possible dans la frame, juste avant le rendu vidéo. Évite l'utilisation d'inputs de la frame N-1.
@@ -207,41 +291,6 @@ Configuration D3D9 :
 **Résultat :** -1 frame de latence réelle côté affichage.
 
 **Fichier modifié :** `src/osd/windows/ddrawd3d.cpp`
-
----
-
-### SLIDER SCREEN REFRESH RATE — HAUTE PRÉCISION & SAUVEGARDE
-
-Sauvegarde et rechargement automatique de la fréquence utilisateur dans `cfg/[nom_du_jeu].cfg`, avec gestion du réglage ultra-fin du refresh rate CRT à 0.0001 Hz, affichage et sauvegarde à 4 décimales.
-
-**Fonctionne uniquement si `auto_refresh_sync = 0`**
-
-**Fonctionnement des touches :**
-- Flèches seules → ±1.0000 Hz
-- SHIFT + flèches → ±0.1000 Hz
-- ALT + flèches → ±0.0010 Hz
-- ESPACE + flèches → ±0.0001 Hz
-- CTRL + flèches → ±1.0000 Hz (rapide)
-
-**Fonctions ajoutées :**
-- `config_load_screen_refresh()` — `src/emu/video.cpp`
-- `config_save_screen_refresh()` — `src/emu/video.cpp`
-
-**Fonctions modifiées :**
-- `slider_refresh()` — `src/emu/ui/ui.cpp`
-  - Conversion base 10000 → Hz pour 4 décimales
-  - Arrondi et sauvegarde CFG précis à 4 décimales
-  - Affichage FPS en 4 décimales
-- `ui_menu_sliders::handle()` — `src/emu/ui/sliders.cpp`
-  - Gestion de la touche ESPACE pour incrément ultra-fin
-- `slider_init()` — `src/emu/ui/ui.cpp`
-  - incval du slider refresh modifié à 1 (0.0001 Hz)
-
-**Fichiers concernés :**
-- `src/emu/screen.cpp` / `screen.h`
-- `src/emu/video.cpp`
-- `src/emu/ui/ui.cpp`
-- `src/emu/ui/sliders.cpp`
 
 ---
 
@@ -380,15 +429,5 @@ L'appel périodique Lua `periodic_check` et `frame_hook` est maintenant comment�
 - **Développement :** Olivier Mileo
 - **Projet :** CRT-MAME ARCADE-2D 0.168 Edition
 - **Base :** MAME 0.168
-
-© 2025 Hardcade — Tous droits réservés
-
----
-
-## CRÉDITS
-
-**Développement :** Olivier Mileo  
-**Projet :** CRT-MAME ARCADE-2D 0.168 Edition  
-**Base :** MAME 0.168
 
 © 2025 Hardcade — Tous droits réservés
